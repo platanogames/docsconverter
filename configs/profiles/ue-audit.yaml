@@ -1,0 +1,31 @@
+project_name: UE Audit Report
+outputs:
+  - format: html
+    output_path: build/output/ue-audit.html
+  - format: pdf
+    output_path: build/output/ue-audit.pdf
+style_profile:
+  pdf_layout_mode: web
+  template_html: ../../templates/base.html
+  css: ../../styles/report.css
+  options:
+    document_theme: dark
+    heading_align: left
+    text_align: left
+    list_spacing: normal
+    table_density: normal
+    zebra_tables: true
+    title_color: '#93c5fd'
+    text_color: '#e5e7eb'
+    table_header_bg: '#1e293b'
+    table_border_color: '#334155'
+    accent_color: '#22d3ee'
+metadata:
+  title: UE Audit Report
+  classification: internal
+  language: en
+  signatures_enabled: true
+rules:
+  normalize_headings: true
+  fix_code_fences: true
+  sanitize_links: false

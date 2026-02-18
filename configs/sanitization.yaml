@@ -1,0 +1,78 @@
+# Configuración de sanitización de markdown
+# Define patrones a eliminar antes de la conversión
+
+# Lista de reglas de sanitización
+rules:
+  # Eliminar marcadores personalizados del sistema anterior
+  - name: "Eliminar marcadores CODE_BEGIN/END"
+    pattern: '\[\[CODE_(BEGIN|END):.*?\]\]'
+    action: remove_line
+    is_regex: true
+    scope: all
+    enabled: true
+  
+  - name: "Eliminar marcadores DIAGRAM_BEGIN/END"
+    pattern: '\[\[DIAGRAM_(BEGIN|END):.*?\]\]'
+    action: remove_line
+    is_regex: true
+    scope: all
+    enabled: true
+  
+  # Eliminar comentarios HTML
+  - name: "Eliminar comentarios HTML"
+    pattern: '<!--.*?-->'
+    action: remove_match
+    is_regex: true
+    scope: outside_code
+    enabled: true
+  
+  # Eliminar tags de Notion
+  - name: "Eliminar menciones @usuario de Notion"
+    pattern: '@\w+'
+    action: remove_match
+    is_regex: true
+    scope: outside_code
+    enabled: false  # Desactivada por defecto
+  
+  # Eliminar marcadores TODO/FIXME
+  - name: "Eliminar marcadores TODO"
+    pattern: '(TODO|FIXME|XXX|HACK):\s*'
+    action: remove_match
+    is_regex: true
+    scope: outside_code
+    enabled: false  # Desactivada por defecto
+  
+  # Eliminar líneas con solo espacios
+  - name: "Limpiar líneas con solo espacios"
+    pattern: '^\s+$'
+    action: replace
+    replacement_text: ''
+    is_regex: true
+    scope: all
+    enabled: true
+  
+  # Normalizar múltiples líneas vacías a máximo 2
+  - name: "Normalizar líneas vacías excesivas"
+    pattern: '\n{4,}'
+    action: replace
+    replacement_text: '\n\n\n'
+    is_regex: true
+    scope: all
+    enabled: true
+  
+  # Eliminar caracteres BOM (Byte Order Mark)
+  - name: "Eliminar BOM UTF-8"
+    pattern: '^\ufeff'
+    action: remove_match
+    is_regex: true
+    scope: all
+    enabled: true
+
+# Opciones generales
+save_cleaned: true
+validate_after_cleaning: true
+
+# Auto-wrap de líneas largas de código
+wrap_long_code_lines: true
+max_code_line_length: 85  # Romper si excede este largo
+code_break_at: 80          # Punto preferido para romper

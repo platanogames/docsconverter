@@ -1,0 +1,151 @@
+# DocsConverter
+
+A Python tool that converts Markdown documents into polished **HTML**, **PDF**, **DOCX**, and **EPUB** files using [Pandoc](https://pandoc.org/). Includes a PySide6 desktop dashboard for real-time style customization, metadata editing, batch processing, and sanitization.
+
+> **Status:** Early development (v0.1.0). Core conversion pipeline is functional. Contributions welcome.
+
+---
+
+## Features
+
+- **Multi-format output** — Convert `.md` to HTML, PDF, DOCX, and EPUB in a single run
+- **YAML profiles** — Define reusable conversion configurations (outputs, styles, metadata, rules)
+- **Style customization** — Live-preview dashboard with theme presets (light/dark), color palettes, and typography controls
+- **Document metadata** — Title, author, reviewer, version, classification badges, watermarks, headers/footers, and signature blocks
+- **Markdown sanitization** — Rule-based cleanup (remove markers, normalize whitespace, strip HTML comments) before conversion
+- **Batch processing** — Convert entire directories with progress tracking and summary reports
+- **Conversion history** — JSONL-based log of all conversions with dashboard metrics
+
+## Requirements
+
+- **Python 3.11+**
+- **Pandoc 3.x** — [Download](https://pandoc.org/installing.html)
+- For PDF output: `wkhtmltopdf` (web mode) or `xelatex`/`pdflatex` (native mode)
+
+## Quick Start
+
+```bash
+# Clone and install
+git clone https://github.com/YOUR_USER/docsconverter.git
+cd docsconverter
+python -m venv .venv
+
+# Activate virtual environment
+# Windows:
+.venv\Scripts\activate
+# Linux/Mac:
+source .venv/bin/activate
+
+pip install -e ".[ui,dev]"
+```
+
+Download [Pandoc](https://pandoc.org/installing.html) and either:
+- Install system-wide (auto-detected), or
+- Place the binary at `pandoc-3.9-windows-x86_64/pandoc-3.9/pandoc.exe`
+
+### CLI Usage
+
+```bash
+# Single file conversion
+python -m app.main convert \
+  --input samples/markdown/sample-report.md \
+  --profile configs/profiles/default.yaml
+
+# Batch conversion (entire directory)
+python -m app.main convert-dir \
+  --input-dir samples/markdown \
+  --profile configs/profiles/default.yaml
+
+# Launch desktop dashboard
+python -m app.main ui
+```
+
+Converted files are written to `build/output/` by default (configurable per profile).
+
+### PDF Modes
+
+- **`web`** — Renders via `wkhtmltopdf`, maximizing visual parity with HTML output
+- **`native`** — Renders via Pandoc + LaTeX (`xelatex`/`pdflatex`) for native PDF typesetting
+
+If no `pdf_engine` is set in the profile, the tool auto-detects an available engine.
+
+## Desktop Dashboard
+
+Launch with `python -m app.main ui`. The dashboard provides:
+
+- Visual profile editor with live HTML preview
+- Style customization dialog (themes, colors, typography, table density)
+- Document presets (Draft, Internal, Approved, Confidential)
+- Batch conversion with progress bar and summary table
+- Conversion history with metrics (total, success, errors)
+- Sanitization panel for markdown cleanup before conversion
+
+## Project Structure
+
+```
+docsconverter/
+  app/
+    core/
+      models.py            Pydantic data models
+      pipeline.py          Conversion engine (Pandoc subprocess)
+      preflight.py         Validation and PDF engine detection
+      rules.py             Markdown normalization
+      sanitizer.py         Rule-based markdown cleanup
+      sanitizer_config.py  Sanitization YAML loader
+      style_builder.py     CSS override generator
+      history.py           JSONL conversion log
+      batch.py             Directory batch processing
+      config.py            YAML profile loader/saver
+    ui/
+      window.py            PySide6 dashboard
+    main.py                CLI entry point
+  configs/
+    profiles/              Conversion profiles (YAML)
+    sanitization.yaml      Sanitization rules
+  templates/
+    base.html              Pandoc HTML template
+  styles/
+    report.css             Base document stylesheet
+  samples/markdown/        Example markdown files
+  tests/                   Unit and integration tests
+```
+
+## Profiles
+
+Profiles are YAML files that bundle all conversion settings:
+
+```yaml
+project_name: My Report
+outputs:
+  - format: html
+    output_path: build/output/report.html
+  - format: pdf
+    output_path: build/output/report.pdf
+style_profile:
+  pdf_layout_mode: web
+  template_html: ../../templates/base.html
+  css: ../../styles/report.css
+  options:
+    document_theme: light
+    zebra_tables: true
+    accent_color: '#0f766e'
+metadata:
+  title: My Report
+  classification: internal
+  language: es
+rules:
+  normalize_headings: true
+  fix_code_fences: true
+```
+
+Built-in profiles: `default`, `auditoria`, `ue-audit`, `ue-architecture`.
+
+## Tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+## License
+
+MIT

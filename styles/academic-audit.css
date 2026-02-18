@@ -1,0 +1,35 @@
+/* DocsConverter — academic audit dark theme */
+
+body {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #e5e7eb;
+  background: #0f172a;
+}
+
+h1, h2, h3, h4, h5, h6 { color: #93c5fd; }
+h2 { border-bottom: 1px solid #334155; }
+
+a { color: #22d3ee; }
+
+table { border: 1px solid #334155; }
+th { background: #1e293b; border: 1px solid #334155; color: #93c5fd; }
+td { border: 1px solid #334155; }
+tbody tr:nth-child(even) { background: #1e293b; }
+
+code { background: #1e293b; border-color: #334155; color: #e5e7eb; }
+pre { background: #020617; }
+
+blockquote { background: #1e293b; border-left-color: #475569; color: #cbd5e1; }
+
+.report-toc { background: #1e293b; border-color: #334155; }
+.report-toc a { color: #22d3ee; }
+
+.classification-badge { background: #1e3a5f; color: #93c5fd; }
+.meta { color: #94a3b8; }
+
+hr { border-top-color: #334155; }

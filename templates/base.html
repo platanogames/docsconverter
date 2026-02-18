@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>$title$</title>
+  $if(highlighting-css)$
+  <style>
+  $highlighting-css$
+  </style>
+  $endif$
+  $for(css)$
+  <link rel="stylesheet" href="$css$" />
+  $endfor$
+</head>
+<body>
+  $if(watermark)$<div class="watermark">$watermark$</div>$endif$
+  $if(header_left)$
+  <div class="print-header">
+    <span>$header_left$</span>
+    <span>$if(header_center)$$header_center$$endif$</span>
+    <span>$if(header_right)$$header_right$$endif$</span>
+  </div>
+  $endif$
+  $if(footer_left)$
+  <div class="print-footer">
+    <span>$footer_left$</span>
+    <span>$if(footer_center)$$footer_center$$endif$</span>
+    <span>$if(footer_right)$$footer_right$$endif$</span>
+  </div>
+  $endif$
+  <div class="document-shell">
+    <article class="page">
+      <header class="report-header">
+        <p class="report-label"><span class="classification-badge classification-$if(classification)$$classification$$else$internal$endif$">$if(classification)$$classification$$else$internal$endif$</span></p>
+        <h1>$title$</h1>
+        $if(subtitle)$<p class="meta"><strong>Subtitulo:</strong> $subtitle$</p>$endif$
+        $if(author)$<p class="meta"><strong>Autor:</strong> $for(author)$$author$$sep$, $endfor$</p>$endif$
+        $if(reviewer)$<p class="meta"><strong>Revisor:</strong> $reviewer$</p>$endif$
+        $if(version)$<p class="meta"><strong>Version:</strong> $version$</p>$endif$
+        $if(lang)$<p class="meta"><strong>Idioma:</strong> $lang$</p>$endif$
+        $if(date)$<p class="meta"><strong>Fecha:</strong> $date$</p>$endif$
+      </header>
+      $if(toc)$
+      <nav id="$idprefix$TOC" role="doc-toc" class="report-toc">
+        <h2>Indice</h2>
+        $toc$
+      </nav>
+      $endif$
+      <main class="report-body">
+        $body$
+        $if(signatures_enabled)$
+        <section class="signature-block">
+          <h2>Firmas y Aprobacion</h2>
+          <table>
+            <thead><tr><th>Rol</th><th>Nombre</th><th>Fecha</th><th>Firma</th></tr></thead>
+            <tbody>
+              <tr><td>Autor</td><td>$if(author)$$author$$endif$</td><td>$if(date)$$date$$endif$</td><td></td></tr>
+              <tr><td>Revisor</td><td>$if(reviewer)$$reviewer$$endif$</td><td></td><td></td></tr>
+              <tr><td>Aprobador</td><td>$if(approver)$$approver$$endif$</td><td>$if(approval_date)$$approval_date$$endif$</td><td></td></tr>
+            </tbody>
+          </table>
+        </section>
+        $endif$
+      </main>
+    </article>
+    <a href="#$idprefix$TOC" class="back-to-toc" aria-label="Volver al indice">Indice</a>
+  </div>
+</body>
+</html>

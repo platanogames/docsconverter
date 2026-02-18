@@ -1,0 +1,31 @@
+project_name: Reporte Default
+outputs:
+  - format: html
+    output_path: build/output/report.html
+  - format: pdf
+    output_path: build/output/report.pdf
+style_profile:
+  pdf_layout_mode: web
+  template_html: ../../templates/base.html
+  css: ../../styles/report.css
+  options:
+    document_theme: light
+    heading_align: left
+    text_align: left
+    list_spacing: normal
+    table_density: normal
+    zebra_tables: true
+    title_color: '#0f172a'
+    text_color: '#1f2937'
+    table_header_bg: '#f8fafc'
+    table_border_color: '#d1d5db'
+    accent_color: '#0f766e'
+metadata:
+  title: null
+  classification: internal
+  language: es
+  signatures_enabled: false
+rules:
+  normalize_headings: true
+  fix_code_fences: true
+  sanitize_links: false

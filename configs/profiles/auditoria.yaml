@@ -1,0 +1,31 @@
+project_name: Reporte Auditoria
+outputs:
+  - format: html
+    output_path: build/output/auditoria.html
+  - format: pdf
+    output_path: build/output/auditoria.pdf
+style_profile:
+  pdf_layout_mode: web
+  template_html: ../../templates/base.html
+  css: ../../styles/report.css
+  options:
+    document_theme: light
+    heading_align: left
+    text_align: justify
+    list_spacing: normal
+    table_density: normal
+    zebra_tables: true
+    title_color: '#0f172a'
+    text_color: '#1f2937'
+    table_header_bg: '#f1f5f9'
+    table_border_color: '#cbd5e1'
+    accent_color: '#0f766e'
+metadata:
+  title: Reporte de Auditoria
+  classification: confidential
+  language: es
+  signatures_enabled: true
+rules:
+  normalize_headings: true
+  fix_code_fences: true
+  sanitize_links: true
