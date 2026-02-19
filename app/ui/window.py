@@ -33,6 +33,7 @@ def run_ui(pandoc_path: Path) -> None:
         QFileDialog,
         QFormLayout,
         QFrame,
+        QGroupBox,
         QHBoxLayout,
         QLabel,
         QLineEdit,
@@ -595,6 +596,7 @@ def run_ui(pandoc_path: Path) -> None:
             self._conversion_thread: QThread | None = None
             self._conversion_worker: ConversionWorker | None = None
             self._progress_dialog: QProgressDialog | None = None
+            self.setAcceptDrops(True)
             self._apply_styles()
 
             root = QWidget()
@@ -620,6 +622,23 @@ def run_ui(pandoc_path: Path) -> None:
             self.load_profile_to_form()
             self.refresh_history()
             self.refresh_dashboard_metrics()
+
+        def dragEnterEvent(self, event) -> None:
+            if event.mimeData().hasUrls():
+                event.acceptProposedAction()
+
+        def dropEvent(self, event) -> None:
+            for url in event.mimeData().urls():
+                file_path = Path(url.toLocalFile())
+                if file_path.suffix.lower() == ".md":
+                    self.input_edit.setText(str(file_path))
+                    self.pages.setCurrentIndex(1)  # Ir a convertidor
+                    self.log.append(f"[ui] Archivo cargado via Drag&Drop: {file_path.name}")
+                elif file_path.suffix.lower() in {".yaml", ".yml"}:
+                    self.profile_edit.setText(str(file_path))
+                    self.load_profile_to_form()
+                    self.pages.setCurrentIndex(1)
+                    self.log.append(f"[ui] Perfil cargado via Drag&Drop: {file_path.name}")
 
         def _apply_styles(self) -> None:
             self.setStyleSheet(
@@ -765,48 +784,78 @@ def run_ui(pandoc_path: Path) -> None:
         def _build_converter_page(self) -> QWidget:
             page = QWidget()
             page_layout = QVBoxLayout(page)
-            scroll = QScrollArea()
-            scroll.setWidgetResizable(True)
-            scroll.setFrameShape(QFrame.Shape.NoFrame)
-            container = QWidget()
-            layout = QVBoxLayout(container)
-            row_input = QHBoxLayout()
-            self.input_edit = QLineEdit("samples/markdown/basic-report.md")
-            btn_input = QPushButton("Archivo MD")
-            btn_input.clicked.connect(self.select_input)
-            row_input.addWidget(QLabel("Input"))
-            row_input.addWidget(self.input_edit)
-            row_input.addWidget(btn_input)
-
-            row_batch = QHBoxLayout()
-            self.batch_dir_edit = QLineEdit("samples/markdown")
-            btn_batch_dir = QPushButton("Carpeta lote")
-            btn_batch_dir.clicked.connect(self.select_batch_dir)
-            self.batch_pattern_edit = QLineEdit("*.md")
-            self.batch_recursive_check = QCheckBox("Recursivo")
-            self.batch_recursive_check.setChecked(True)
-            row_batch.addWidget(QLabel("Batch"))
-            row_batch.addWidget(self.batch_dir_edit)
-            row_batch.addWidget(btn_batch_dir)
-            row_batch.addWidget(QLabel("Patron"))
-            row_batch.addWidget(self.batch_pattern_edit)
-            row_batch.addWidget(self.batch_recursive_check)
-
+            
+            # --- SECCION PERFIL (TOP) ---
+            group_profile = QGroupBox("Configuración de Perfil")
+            layout_profile_group = QVBoxLayout(group_profile)
             row_profile = QHBoxLayout()
             self.profile_edit = QLineEdit("configs/profiles/default.yaml")
-            btn_profile = QPushButton("Perfil")
+            btn_profile = QPushButton("Buscar")
             btn_profile.clicked.connect(self.select_profile)
             btn_load = QPushButton("Cargar")
             btn_load.clicked.connect(self.load_profile_to_form)
             btn_save = QPushButton("Guardar")
             btn_save.clicked.connect(self.save_profile_from_form)
-            row_profile.addWidget(QLabel("Perfil"))
+            row_profile.addWidget(QLabel("Archivo:"))
             row_profile.addWidget(self.profile_edit)
             row_profile.addWidget(btn_profile)
             row_profile.addWidget(btn_load)
             row_profile.addWidget(btn_save)
+            layout_profile_group.addLayout(row_profile)
+            page_layout.addWidget(group_profile)
 
-            form = QFormLayout()
+            # --- SECCION ORIGEN (TABS) ---
+            self.input_tabs = QTabWidget()
+            
+            # Tab Archivo Unico
+            tab_single = QWidget()
+            layout_single = QVBoxLayout(tab_single)
+            row_input = QHBoxLayout()
+            self.input_edit = QLineEdit("samples/markdown/basic-report.md")
+            btn_input = QPushButton("Seleccionar Markdown")
+            btn_input.clicked.connect(self.select_input)
+            row_input.addWidget(QLabel("Entrada:"))
+            row_input.addWidget(self.input_edit)
+            row_input.addWidget(btn_input)
+            layout_single.addLayout(row_input)
+            self.input_tabs.addTab(tab_single, "📄 Archivo Único")
+            
+            # Tab Carpeta (Lote)
+            tab_batch = QWidget()
+            layout_batch = QVBoxLayout(tab_batch)
+            row_batch = QHBoxLayout()
+            self.batch_dir_edit = QLineEdit("samples/markdown")
+            btn_batch_dir = QPushButton("Seleccionar Carpeta")
+            btn_batch_dir.clicked.connect(self.select_batch_dir)
+            row_batch.addWidget(QLabel("Directorio:"))
+            row_batch.addWidget(self.batch_dir_edit)
+            row_batch.addWidget(btn_batch_dir)
+            
+            row_batch_opts = QHBoxLayout()
+            self.batch_pattern_edit = QLineEdit("*.md")
+            self.batch_recursive_check = QCheckBox("Recursivo")
+            self.batch_recursive_check.setChecked(True)
+            row_batch_opts.addWidget(QLabel("Patrón:"))
+            row_batch_opts.addWidget(self.batch_pattern_edit)
+            row_batch_opts.addWidget(self.batch_recursive_check)
+            row_batch_opts.addStretch()
+            
+            layout_batch.addLayout(row_batch)
+            layout_batch.addLayout(row_batch_opts)
+            self.input_tabs.addTab(tab_batch, "📁 Conversión por Lote")
+            
+            page_layout.addWidget(self.input_tabs)
+
+            # --- AREA DE DESPLAZAMIENTO PARA CONFIGURACION DETALLADA ---
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.Shape.NoFrame)
+            container = QWidget()
+            layout = QVBoxLayout(container)
+            
+            # Grupo Metadatos
+            group_meta = QGroupBox("Metadatos y Clasificación")
+            form_meta = QFormLayout(group_meta)
             self.project_name_edit = QLineEdit("Reporte Default")
             self.meta_title_edit = QLineEdit("Reporte Default")
             self.meta_subtitle_edit = QLineEdit("")
@@ -832,6 +881,28 @@ def run_ui(pandoc_path: Path) -> None:
             self.doc_preset_combo.addItem("Sin preset")
             for preset_name in self.DOCUMENT_PRESETS.keys():
                 self.doc_preset_combo.addItem(preset_name)
+            
+            form_meta.addRow("Proyecto", self.project_name_edit)
+            form_meta.addRow("Título Documento", self.meta_title_edit)
+            form_meta.addRow("Subtítulo", self.meta_subtitle_edit)
+            form_meta.addRow("Autor / Revisor", self.meta_author_edit)
+            form_meta.addRow("Versión", self.meta_version_edit)
+            form_meta.addRow("Clasificación / Idioma", self.meta_classification_combo)
+            form_meta.addRow("Fecha ISO", self.meta_date_edit)
+            
+            doc_preset_row = QHBoxLayout()
+            doc_preset_row.addWidget(self.doc_preset_combo)
+            btn_apply_doc_preset = QPushButton("Aplicar preset")
+            btn_apply_doc_preset.clicked.connect(self.apply_document_preset)
+            doc_preset_row.addWidget(btn_apply_doc_preset)
+            form_meta.addRow("Presets Documentales", doc_preset_row)
+            
+            layout.addWidget(group_meta)
+
+            # Grupo Salidas y Formatos
+            group_outputs = QGroupBox("Formatos de Salida")
+            form_out = QFormLayout(group_outputs)
+            
             self.output_html_check = QCheckBox()
             self.output_html_check.setChecked(True)
             self.output_html_edit = QLineEdit("build/output/report.html")
@@ -844,6 +915,21 @@ def run_ui(pandoc_path: Path) -> None:
             self.output_epub_check = QCheckBox()
             self.output_epub_check.setChecked(False)
             self.output_epub_edit = QLineEdit("build/output/report.epub")
+            
+            form_out.addRow("Exportar HTML", self.output_html_check)
+            form_out.addRow("Ruta HTML", self.output_html_edit)
+            form_out.addRow("Exportar PDF", self.output_pdf_check)
+            form_out.addRow("Ruta PDF", self.output_pdf_edit)
+            form_out.addRow("Exportar DOCX", self.output_docx_check)
+            form_out.addRow("Ruta DOCX", self.output_docx_edit)
+            form_out.addRow("Exportar EPUB", self.output_epub_check)
+            form_out.addRow("Ruta EPUB", self.output_epub_edit)
+            layout.addWidget(group_outputs)
+
+            # Grupo Motores y Estilos
+            group_styles = QGroupBox("Motores, Estilos y Reglas")
+            form_styles = QFormLayout(group_styles)
+            
             self.pdf_engine_edit = QLineEdit("")
             self.pdf_layout_mode_combo = QComboBox()
             self.pdf_layout_mode_combo.addItems(["web", "native"])
@@ -854,30 +940,30 @@ def run_ui(pandoc_path: Path) -> None:
 
             template_row = QHBoxLayout()
             template_row.addWidget(self.template_html_edit)
-            btn_template = QPushButton("Template")
+            btn_template = QPushButton("Buscar")
             btn_template.clicked.connect(self.select_template)
             template_row.addWidget(btn_template)
 
             template_pdf_row = QHBoxLayout()
             template_pdf_row.addWidget(self.template_pdf_edit)
-            btn_template_pdf = QPushButton("Template PDF")
+            btn_template_pdf = QPushButton("Buscar")
             btn_template_pdf.clicked.connect(self.select_template_pdf)
             template_pdf_row.addWidget(btn_template_pdf)
 
             css_row = QHBoxLayout()
             css_row.addWidget(self.css_edit)
-            btn_css = QPushButton("CSS")
+            btn_css = QPushButton("Buscar")
             btn_css.clicked.connect(self.select_css)
             css_row.addWidget(btn_css)
 
-            self.rule_heading_check = QCheckBox()
+            self.rule_heading_check = QCheckBox("Normalizar encabezados")
             self.rule_heading_check.setChecked(True)
-            self.rule_fences_check = QCheckBox()
+            self.rule_fences_check = QCheckBox("Arreglar bloques de código")
             self.rule_fences_check.setChecked(True)
-            self.rule_links_check = QCheckBox()
+            self.rule_links_check = QCheckBox("Sanitizar enlaces externos")
 
             style_row = QHBoxLayout()
-            btn_customize = QPushButton("Abrir dashboard de personalizacion")
+            btn_customize = QPushButton("🎨 Abrir Personalizador Visual")
             btn_customize.clicked.connect(self.open_style_customizer)
             self.style_summary = QLabel("")
             self.style_summary.setObjectName("MetricLabel")
@@ -886,85 +972,45 @@ def run_ui(pandoc_path: Path) -> None:
 
             preset_row = QHBoxLayout()
             self.preset_combo = QComboBox()
-            self.preset_combo.addItem("Sin preset")
+            self.preset_combo.addItem("Sin preset visual")
             for preset_name in StyleCustomizerDialog.PRESETS.keys():
                 self.preset_combo.addItem(preset_name)
-            btn_apply_preset = QPushButton("Aplicar preset")
+            btn_apply_preset = QPushButton("Aplicar")
             btn_apply_preset.clicked.connect(self.apply_selected_preset)
             preset_row.addWidget(self.preset_combo)
             preset_row.addWidget(btn_apply_preset)
             preset_row.addStretch()
 
-            form.addRow("Proyecto", self.project_name_edit)
-            form.addRow("Titulo", self.meta_title_edit)
-            form.addRow("Subtitulo", self.meta_subtitle_edit)
-            form.addRow("Autor", self.meta_author_edit)
-            form.addRow("Revisor", self.meta_reviewer_edit)
-            form.addRow("Version", self.meta_version_edit)
-            form.addRow("Clasificacion", self.meta_classification_combo)
-            form.addRow("Idioma", self.meta_language_combo)
-            form.addRow("Fecha", self.meta_date_edit)
-            form.addRow("Header izq", self.meta_header_left_edit)
-            form.addRow("Header centro", self.meta_header_center_edit)
-            form.addRow("Header der", self.meta_header_right_edit)
-            form.addRow("Footer izq", self.meta_footer_left_edit)
-            form.addRow("Footer centro", self.meta_footer_center_edit)
-            form.addRow("Footer der", self.meta_footer_right_edit)
-            form.addRow("Watermark", self.meta_watermark_edit)
-            form.addRow("Aprobador", self.meta_approver_edit)
-            form.addRow("Fecha aprobacion", self.meta_approval_date_edit)
-            form.addRow("Bloque firmas", self.meta_signatures_check)
-            doc_preset_row = QHBoxLayout()
-            doc_preset_row.addWidget(self.doc_preset_combo)
-            btn_apply_doc_preset = QPushButton("Aplicar preset documental")
-            btn_apply_doc_preset.clicked.connect(self.apply_document_preset)
-            doc_preset_row.addWidget(btn_apply_doc_preset)
-            doc_preset_row.addStretch()
-            form.addRow("Preset documental", doc_preset_row)
-            form.addRow("Exportar HTML", self.output_html_check)
-            form.addRow("Ruta HTML", self.output_html_edit)
-            form.addRow("Exportar PDF", self.output_pdf_check)
-            form.addRow("Ruta PDF", self.output_pdf_edit)
-            form.addRow("Exportar DOCX", self.output_docx_check)
-            form.addRow("Ruta DOCX", self.output_docx_edit)
-            form.addRow("Exportar EPUB", self.output_epub_check)
-            form.addRow("Ruta EPUB", self.output_epub_edit)
-            form.addRow("Motor PDF", self.pdf_engine_edit)
-            form.addRow("Modo PDF", self.pdf_layout_mode_combo)
-            form.addRow("Template HTML", template_row)
-            form.addRow("Template PDF", template_pdf_row)
-            form.addRow("Estilo CSS", css_row)
-            form.addRow("Personalizacion", style_row)
-            form.addRow("Preset visual", preset_row)
-            form.addRow("normalize_headings", self.rule_heading_check)
-            form.addRow("fix_code_fences", self.rule_fences_check)
-            form.addRow("sanitize_links", self.rule_links_check)
+            form_styles.addRow("Motor PDF", self.pdf_engine_edit)
+            form_styles.addRow("Modo PDF", self.pdf_layout_mode_combo)
+            form_styles.addRow("Template HTML", template_row)
+            form_styles.addRow("Template PDF", template_pdf_row)
+            form_styles.addRow("Estilo CSS", css_row)
+            form_styles.addRow("Estilos Visuales", style_row)
+            form_styles.addRow("Preset Visual", preset_row)
+            form_styles.addRow("Regla 1", self.rule_heading_check)
+            form_styles.addRow("Regla 2", self.rule_fences_check)
+            form_styles.addRow("Regla 3", self.rule_links_check)
+            layout.addWidget(group_styles)
 
+            # --- PANEL DE ACCIONES (BOTTOM) ---
             action_row = QHBoxLayout()
-            self.btn_convert = QPushButton("Convertir")
+            self.btn_convert = QPushButton("🚀 CONVERTIR AHORA")
             self.btn_convert.setObjectName("Primary")
-            self.btn_convert.clicked.connect(self.convert)
-            self.btn_convert_batch = QPushButton("Convertir carpeta (lote)")
-            self.btn_convert_batch.clicked.connect(self.convert_batch)
-            btn_open_html = QPushButton("Abrir ultimo HTML")
+            self.btn_convert.setMinimumHeight(45)
+            self.btn_convert.clicked.connect(self._on_convert_clicked)
+            
+            btn_open_html = QPushButton("🌐 HTML")
             btn_open_html.clicked.connect(self.open_last_html)
-            btn_open_pdf = QPushButton("Abrir ultimo PDF")
+            btn_open_pdf = QPushButton("📕 PDF")
             btn_open_pdf.clicked.connect(self.open_last_pdf)
-            btn_open_docx = QPushButton("Abrir ultimo DOCX")
-            btn_open_docx.clicked.connect(self.open_last_docx)
-            btn_open_epub = QPushButton("Abrir ultimo EPUB")
-            btn_open_epub.clicked.connect(self.open_last_epub)
-            btn_export_batch = QPushButton("Exportar resumen lote")
-            btn_export_batch.clicked.connect(self.export_batch_summary)
-            action_row.addWidget(self.btn_convert)
-            action_row.addWidget(self.btn_convert_batch)
+            
+            action_row.addWidget(self.btn_convert, 2)
             action_row.addWidget(btn_open_html)
             action_row.addWidget(btn_open_pdf)
-            action_row.addWidget(btn_open_docx)
-            action_row.addWidget(btn_open_epub)
-            action_row.addWidget(btn_export_batch)
             action_row.addStretch()
 
+            # --- AREA DE LOGS Y PREVIEW ---
             self.log = QTextEdit()
             self.log.setReadOnly(True)
             self.preview = QTextBrowser()
@@ -974,20 +1020,16 @@ def run_ui(pandoc_path: Path) -> None:
                 ["Archivo", "Formato", "Estado", "Codigo", "Salida"]
             )
             self.batch_summary_table.horizontalHeader().setStretchLastSection(True)
-            tabs = QTabWidget()
-            tabs.addTab(self.log, "Logs")
-            tabs.addTab(self.preview, "Vista previa HTML")
-            tabs.addTab(self.batch_summary_table, "Resumen lote")
+            
+            tabs_bottom = QTabWidget()
+            tabs_bottom.addTab(self.log, "Registro (Logs)")
+            tabs_bottom.addTab(self.preview, "Vista Previa")
+            tabs_bottom.addTab(self.batch_summary_table, "Resumen Lote")
 
-            layout.addLayout(row_input)
-            layout.addLayout(row_batch)
-            layout.addLayout(row_profile)
-            layout.addLayout(form)
-            layout.addLayout(action_row)
-            layout.addWidget(tabs)
-            layout.addStretch()
             scroll.setWidget(container)
             page_layout.addWidget(scroll)
+            page_layout.addLayout(action_row)
+            page_layout.addWidget(tabs_bottom)
             return page
 
         def _build_history_page(self) -> QWidget:
@@ -1197,7 +1239,14 @@ def run_ui(pandoc_path: Path) -> None:
             # Cambiar a la página de convertidor
             self.pages.setCurrentIndex(1)
             # Simular click en el botón de conversión
-            self._run_single_conversion()
+            self._on_convert_clicked()
+
+        def _on_convert_clicked(self) -> None:
+            """Despacha la conversión según la pestaña activa (Único o Lote)."""
+            if self.input_tabs.currentIndex() == 0:
+                self.convert()
+            else:
+                self.convert_batch()
 
         def _refresh_style_summary(self) -> None:
             opt = self._style_options
@@ -1578,8 +1627,6 @@ def run_ui(pandoc_path: Path) -> None:
             self._progress_dialog.setValue(0)
             self._progress_dialog.show()
             self.btn_convert.setEnabled(False)
-            if hasattr(self, "btn_convert_batch"):
-                self.btn_convert_batch.setEnabled(False)
 
         def _update_progress(self, value: int, message: str) -> None:
             if self._progress_dialog:
@@ -1592,8 +1639,6 @@ def run_ui(pandoc_path: Path) -> None:
                 self._progress_dialog.deleteLater()
                 self._progress_dialog = None
             self.btn_convert.setEnabled(True)
-            if hasattr(self, "btn_convert_batch"):
-                self.btn_convert_batch.setEnabled(True)
 
         def _cleanup_conversion_thread(self) -> None:
             if self._conversion_thread:

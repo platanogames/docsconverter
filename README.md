@@ -2,25 +2,18 @@
 
 A Python tool that converts Markdown documents into polished **HTML**, **PDF**, **DOCX**, and **EPUB** files using [Pandoc](https://pandoc.org/). Includes a PySide6 desktop dashboard for real-time style customization, metadata editing, batch processing, and sanitization.
 
-> **Status:** Early development (v0.1.0). Core conversion pipeline is functional. Contributions welcome.
+> **Status:** Early development (v0.1.0). Core conversion pipeline is functional.
 
 ---
 
 ## Features
 
 - **Multi-format output** — Convert `.md` to HTML, PDF, DOCX, and EPUB in a single run
-- **YAML profiles** — Define reusable conversion configurations (outputs, styles, metadata, rules)
-- **Style customization** — Live-preview dashboard with theme presets (light/dark), color palettes, and typography controls
-- **Document metadata** — Title, author, reviewer, version, classification badges, watermarks, headers/footers, and signature blocks
-- **Markdown sanitization** — Rule-based cleanup (remove markers, normalize whitespace, strip HTML comments) before conversion
-- **Batch processing** — Convert entire directories with progress tracking and summary reports
-- **Conversion history** — JSONL-based log of all conversions with dashboard metrics
-
-## Requirements
-
-- **Python 3.11+**
-- **Pandoc 3.x** — [Download](https://pandoc.org/installing.html)
-- For PDF output: `wkhtmltopdf` (web mode) or `xelatex`/`pdflatex` (native mode)
+- **YAML profiles** — Define reusable conversion configurations
+- **UX Dashboard** — New tabbed interface for single/batch conversion, grouped metadata, and **Drag & Drop** support.
+- **Style customization** — Live-preview dashboard with theme presets and typography controls
+- **Markdown sanitization** — Rule-based cleanup before conversion
+- **Quick Start** — New `run_dashboard.bat` for easy one-click launch on Windows.
 
 ## Quick Start
 
@@ -28,15 +21,9 @@ A Python tool that converts Markdown documents into polished **HTML**, **PDF**, 
 # Clone and install
 git clone https://github.com/YOUR_USER/docsconverter.git
 cd docsconverter
-python -m venv .venv
 
-# Activate virtual environment
-# Windows:
-.venv\Scripts\activate
-# Linux/Mac:
-source .venv/bin/activate
-
-pip install -e ".[ui,dev]"
+# Easy launch (Windows)
+run_dashboard.bat
 ```
 
 Download [Pandoc](https://pandoc.org/installing.html) and either:
