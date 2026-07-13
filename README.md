@@ -1,5 +1,9 @@
 # DocsConverter
 
+[![CI](https://github.com/platanogames/docsconverter/actions/workflows/ci.yml/badge.svg)](https://github.com/platanogames/docsconverter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+
 A Python tool that converts Markdown documents into polished **HTML**, **PDF**, **DOCX**, and **EPUB** files using [Pandoc](https://pandoc.org/). Includes a PySide6 desktop dashboard for real-time style customization, metadata editing, batch processing, and sanitization.
 
 > **Status:** Early development (v0.1.0). Core conversion pipeline is functional.
@@ -135,4 +139,10 @@ python -m pytest tests/ -v
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
+
+## Contributing and security
+
+- [Contribution guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
