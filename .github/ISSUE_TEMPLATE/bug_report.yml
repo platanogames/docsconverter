@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible conversion, CLI, or desktop UI defect.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for providing a minimal, sanitized reproduction.
+  - type: input
+    id: version
+    attributes:
+      label: DocsConverter revision or version
+      placeholder: v0.1.0 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, and Pandoc version.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options: [CLI conversion, Batch conversion, Desktop dashboard, Packaging, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include the command, profile, and a minimal non-confidential input.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result and logs
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I removed confidential document content and credentials.
+          required: true

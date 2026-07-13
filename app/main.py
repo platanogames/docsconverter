@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -14,27 +13,26 @@ if __name__ == "__main__":
 from app.core.batch import collect_markdown_files, retarget_outputs_for_input
 from app.core.config import load_profile
 from app.core.models import ConversionJob
+from app.core.paths import get_default_pandoc_path, get_user_data_dir
 from app.core.pipeline import run_conversion_job
 from app.core.preflight import preflight_or_raise
-
-DEFAULT_PANDOC_PATH = Path("pandoc-3.9-windows-x86_64/pandoc-3.9/pandoc.exe")
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="DocsConverter")
-    parser.add_argument("--pandoc", type=Path, default=DEFAULT_PANDOC_PATH, help="Ruta a pandoc.exe")
+    parser.add_argument("--pandoc", type=Path, default=None, help="Ruta a pandoc.exe")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     cmd_convert = subparsers.add_parser("convert", help="Ejecuta conversion de documento")
     cmd_convert.add_argument("--input", type=Path, required=True, help="Archivo markdown de entrada")
     cmd_convert.add_argument("--profile", type=Path, required=True, help="Perfil YAML de conversion")
-    cmd_convert.add_argument("--history", type=Path, default=Path("logs/history.jsonl"), help="Ruta de historial")
+    cmd_convert.add_argument("--history", type=Path, default=None, help="Ruta de historial")
 
     cmd_convert_dir = subparsers.add_parser("convert-dir", help="Ejecuta conversion por lote de carpeta")
     cmd_convert_dir.add_argument("--input-dir", type=Path, required=True, help="Carpeta con markdowns")
     cmd_convert_dir.add_argument("--profile", type=Path, required=True, help="Perfil YAML de conversion")
-    cmd_convert_dir.add_argument("--history", type=Path, default=Path("logs/history.jsonl"), help="Ruta de historial")
+    cmd_convert_dir.add_argument("--history", type=Path, default=None, help="Ruta de historial")
     cmd_convert_dir.add_argument("--pattern", type=str, default="*.md", help="Patron glob de entrada")
     cmd_convert_dir.add_argument("--no-recursive", action="store_true", help="No incluir subcarpetas")
 
@@ -42,7 +40,16 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _resolve_args(args: argparse.Namespace) -> None:
+    """Fill in default values that depend on runtime path resolution."""
+    if args.pandoc is None:
+        args.pandoc = get_default_pandoc_path()
+    if hasattr(args, "history") and args.history is None:
+        args.history = get_user_data_dir() / "logs" / "history.jsonl"
+
+
 def run_convert(args: argparse.Namespace) -> int:
+    _resolve_args(args)
     profile = load_profile(args.profile)
     had_configured_pdf_engine = bool(profile.style_profile.pdf_engine)
     job = ConversionJob(
@@ -73,6 +80,7 @@ def run_convert(args: argparse.Namespace) -> int:
 
 
 def run_ui(args: argparse.Namespace) -> int:
+    _resolve_args(args)
     try:
         from app.ui.window import run_ui as _run_ui
     except ImportError as exc:
@@ -84,6 +92,7 @@ def run_ui(args: argparse.Namespace) -> int:
 
 
 def run_convert_dir(args: argparse.Namespace) -> int:
+    _resolve_args(args)
     profile = load_profile(args.profile)
     recursive = not args.no_recursive
     input_dir = args.input_dir.resolve()
@@ -106,7 +115,7 @@ def run_convert_dir(args: argparse.Namespace) -> int:
             style_profile=profile.style_profile.model_copy(deep=True),
             metadata=profile.metadata.model_copy(deep=True),
             rules=profile.rules.model_copy(deep=True),
-            build_dir=Path("build") / "batch" / input_file.stem,
+            build_dir=get_user_data_dir() / "build" / "batch" / input_file.stem,
         )
         if not job.metadata.title:
             job.metadata.title = f"{profile.project_name} - {input_file.stem}"
