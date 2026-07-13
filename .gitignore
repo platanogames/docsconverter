@@ -10,6 +10,8 @@ dist/
 
 # IDE
 .idea/
+.claude/
+.jarvis/
 
 # Build artifacts
 build/
@@ -19,11 +21,18 @@ logs/
 
 # Pandoc binary (large — download separately)
 pandoc-*/
+/pandoc-*.zip
 
 # Temp files
 .tmp/
 .pytest_cache/
+.ruff_cache/
 *.tmp
+
+# Local conversion outputs and project-specific material
+/to*.html
+/to*.pdf
+/test-maquetacion.md
 
 # OS
 Thumbs.db

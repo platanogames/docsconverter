@@ -15,13 +15,19 @@ from app.core.models import (
     StyleOptions,
     StyleProfile,
 )
+from app.core.paths import (
+    get_configs_dir,
+    get_styles_dir,
+    get_templates_dir,
+    get_user_data_dir,
+)
 from app.core.pipeline import run_conversion_job
 from app.core.preflight import preflight_or_raise
 from app.core.style_builder import build_override_css
 
 
 def run_ui(pandoc_path: Path) -> None:
-    from PySide6.QtCore import QObject, QThread, Qt, QUrl, Signal
+    from PySide6.QtCore import QObject, Qt, QThread, QUrl, Signal
     from PySide6.QtGui import QDesktopServices
     from PySide6.QtWidgets import (
         QApplication,
@@ -159,7 +165,7 @@ def run_ui(pandoc_path: Path) -> None:
                         style_profile=self.profile.style_profile.model_copy(deep=True),
                         metadata=self.profile.metadata.model_copy(deep=True),
                         rules=self.profile.rules.model_copy(deep=True),
-                        build_dir=Path("build") / "batch" / input_file.stem,
+                        build_dir=get_user_data_dir() / "build" / "batch" / input_file.stem,
                     )
                     if not job.metadata.title:
                         job.metadata.title = f"{self.profile.project_name} - {input_file.stem}"
@@ -581,7 +587,7 @@ def run_ui(pandoc_path: Path) -> None:
             super().__init__()
             self.setWindowTitle("DocsConverter Dashboard")
             self.resize(1300, 820)
-            self.history_path = Path("logs/history.jsonl")
+            self.history_path = get_user_data_dir() / "logs" / "history.jsonl"
             self._last_html_output: Path | None = None
             self._last_pdf_output: Path | None = None
             self._last_docx_output: Path | None = None
@@ -789,7 +795,7 @@ def run_ui(pandoc_path: Path) -> None:
             group_profile = QGroupBox("Configuración de Perfil")
             layout_profile_group = QVBoxLayout(group_profile)
             row_profile = QHBoxLayout()
-            self.profile_edit = QLineEdit("configs/profiles/default.yaml")
+            self.profile_edit = QLineEdit(str(get_configs_dir() / "profiles" / "default.yaml"))
             btn_profile = QPushButton("Buscar")
             btn_profile.clicked.connect(self.select_profile)
             btn_load = QPushButton("Cargar")
@@ -934,9 +940,9 @@ def run_ui(pandoc_path: Path) -> None:
             self.pdf_layout_mode_combo = QComboBox()
             self.pdf_layout_mode_combo.addItems(["web", "native"])
             self.pdf_layout_mode_combo.currentTextChanged.connect(self.on_pdf_mode_changed)
-            self.template_html_edit = QLineEdit("templates/base.html")
+            self.template_html_edit = QLineEdit(str(get_templates_dir() / "base.html"))
             self.template_pdf_edit = QLineEdit("")
-            self.css_edit = QLineEdit("styles/report.css")
+            self.css_edit = QLineEdit(str(get_styles_dir() / "report.css"))
 
             template_row = QHBoxLayout()
             template_row.addWidget(self.template_html_edit)
@@ -1166,10 +1172,10 @@ def run_ui(pandoc_path: Path) -> None:
             """Carga la configuración de sanitización desde YAML."""
             try:
                 from app.core.sanitizer_config import load_sanitization_config
-                config_path = Path("configs/sanitization.yaml")
-                
+                config_path = get_configs_dir() / "sanitization.yaml"
+
                 if not config_path.exists():
-                    self.sanitize_log.append("⚠️  configs/sanitization.yaml no encontrado")
+                    self.sanitize_log.append(f"⚠️  {config_path} no encontrado")
                     self.sanitize_log.append("   Creando configuración por defecto...")
                     # Crear configuración por defecto
                     from app.core.sanitizer import SanitizationConfig
@@ -1195,17 +1201,17 @@ def run_ui(pandoc_path: Path) -> None:
         
         def _preview_sanitization(self) -> None:
             """Muestra una vista previa de lo que se sanitizará."""
-            if not self.input_file_edit.text():
+            if not self.input_edit.text():
                 QMessageBox.warning(self, "Advertencia", "Primero carga un archivo en la pestaña Convertidor")
                 return
-            
+
             if not self._sanitization_config:
                 self._load_sanitization_config()
-            
+
             try:
                 from app.core.sanitizer import MarkdownSanitizer
-                
-                input_path = Path(self.input_file_edit.text())
+
+                input_path = Path(self.input_edit.text())
                 content = input_path.read_text(encoding="utf-8")
                 
                 sanitizer = MarkdownSanitizer(self._sanitization_config)
@@ -1811,7 +1817,7 @@ def run_ui(pandoc_path: Path) -> None:
             if not self._last_batch_summary_text or not self._last_batch_summary_json:
                 return
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-            out_dir = Path("logs/batch")
+            out_dir = get_user_data_dir() / "logs" / "batch"
             out_dir.mkdir(parents=True, exist_ok=True)
             txt_path = out_dir / f"batch-summary-{timestamp}.txt"
             json_path = out_dir / f"batch-summary-{timestamp}.json"
@@ -1847,12 +1853,14 @@ def run_ui(pandoc_path: Path) -> None:
                     job.metadata.title = profile.project_name
                 self._open_progress("Preparando conversion...")
                 self._conversion_thread = QThread(self)
+                sanitization_config = getattr(self, '_temp_sanitization_config', None)
+                self._temp_sanitization_config = None
                 self._conversion_worker = ConversionWorker(
                     job=job,
                     pandoc_path_value=self._pandoc_path,
                     history_path_value=self.history_path,
                     had_configured_pdf_engine=had_configured_pdf_engine,
-                    sanitization_config=getattr(self, '_temp_sanitization_config', None),
+                    sanitization_config=sanitization_config,
                 )
                 self._conversion_worker.moveToThread(self._conversion_thread)
                 self._conversion_thread.started.connect(self._conversion_worker.run)

@@ -8,6 +8,7 @@ from typing import Callable
 
 from app.core.history import append_history
 from app.core.models import ConversionJob, ConversionResult, OutputTarget
+from app.core.paths import get_user_data_dir
 from app.core.rules import apply_rules
 from app.core.style_builder import build_override_css
 
@@ -39,7 +40,7 @@ def run_conversion_job(
     content = apply_rules(content, job.rules)
 
     # Prepare build directory
-    build_dir = job.build_dir or Path("build") / "pipeline"
+    build_dir = job.build_dir or get_user_data_dir() / "build" / "pipeline"
     build_dir.mkdir(parents=True, exist_ok=True)
 
     # Write processed markdown
@@ -188,7 +189,6 @@ def _convert_single(
 
     # Execute
     start = time.monotonic()
-    timed_out = False
     try:
         proc = subprocess.run(
             cmd,

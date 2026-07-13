@@ -1,0 +1,41 @@
+project_name: Fixture Complex
+outputs:
+  - format: html
+    output_path: build/output/fixture-complex.html
+  - format: pdf
+    output_path: build/output/fixture-complex.pdf
+  - format: docx
+    output_path: build/output/fixture-complex.docx
+  - format: epub
+    output_path: build/output/fixture-complex.epub
+style_profile:
+  pdf_layout_mode: web
+  template_html: ../../templates/base.html
+  css: ../../styles/report.css
+  options:
+    document_theme: light
+    heading_align: left
+    text_align: left
+    list_spacing: compact
+    table_density: compact
+    zebra_tables: false
+    title_color: '#0b172a'
+    text_color: '#1f2937'
+    table_header_bg: '#dbeafe'
+    table_border_color: '#93c5fd'
+    accent_color: '#1d4ed8'
+metadata:
+  title: Fixture Complex Report
+  subtitle: Comprehensive Test
+  author: Test Author
+  reviewer: Test Reviewer
+  version: '1.0'
+  classification: internal
+  language: es
+  signatures_enabled: true
+  approver: Test Approver
+  approval_date: '2026-01-01'
+rules:
+  normalize_headings: true
+  fix_code_fences: true
+  sanitize_links: true

@@ -1,0 +1,61 @@
+# ============================================
+# COMANDOS INDIVIDUALES PARA COPIAR Y PEGAR
+# ============================================
+
+# OPCIÓN 1 - Ejecutar el script completo
+# ----------------------------------------
+# Copia y pega esto en PowerShell (como Administrador):
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; .\scripts\instalar-paquetes-latex.ps1
+
+
+# OPCIÓN 2 - Comandos uno por uno
+# ----------------------------------------
+# Copia y pega cada línea en PowerShell (como Administrador):
+
+# 1. Activar auto-instalación
+initexmf --set-config-value=[MPM]AutoInstall=1
+
+# 2. Actualizar base de datos de paquetes
+mpm --update-db
+
+# 3. Instalar fancyvrb
+mpm --install=fancyvrb
+
+# 4. Instalar framed
+mpm --install=framed
+
+# 5. Actualizar base de datos de archivos
+initexmf --update-fndb
+
+# 6. Verificar instalación
+mpm --list | Select-String -Pattern "fancyvrb|framed"
+
+
+# OPCIÓN 3 - Todo en una sola línea
+# ----------------------------------------
+# Copia y pega esta línea completa:
+
+initexmf --set-config-value=[MPM]AutoInstall=1; mpm --update-db; mpm --install=fancyvrb; mpm --install=framed; initexmf --update-fndb
+
+
+# SOLUCIÓN DE PROBLEMAS
+# ----------------------------------------
+
+# Si mpm no se encuentra, buscar la ruta de MiKTeX:
+Get-Command mpm -ErrorAction SilentlyContinue | Select-Object Source
+
+# Si no está en PATH, agregar temporalmente (ajusta la ruta si es necesaria):
+$env:Path += ";C:\Program Files\MiKTeX\miktex\bin\x64"
+
+# Verificar que MiKTeX está instalado:
+initexmf --version
+
+# Listar todos los paquetes instalados:
+mpm --list
+
+# Buscar si fancyvrb ya está instalado:
+mpm --list | Select-String "fancyvrb"
+
+# Buscar si framed ya está instalado:
+mpm --list | Select-String "framed"

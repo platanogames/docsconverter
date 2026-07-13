@@ -1,0 +1,25 @@
+cases:
+  - input: fixtures/complex_markdown/01-corporate-report.md
+    should_normalize_headings: true
+    should_fix_code_fences: true
+    should_sanitize_www_links: true
+    expected_www_links:
+      - https://www.internal-board.example
+  - input: fixtures/complex_markdown/02-technical-rfc.md
+    should_normalize_headings: true
+    should_fix_code_fences: true
+    should_sanitize_www_links: true
+    expected_www_links:
+      - https://www.arch.local/docs
+  - input: fixtures/complex_markdown/03-knowledge-base.md
+    should_normalize_headings: true
+    should_fix_code_fences: true
+    should_sanitize_www_links: true
+    expected_www_links:
+      - https://www.runbook.local/main
+  - input: fixtures/complex_markdown/04-release-notes-heavy.md
+    should_normalize_headings: true
+    should_fix_code_fences: true
+    should_sanitize_www_links: true
+    expected_www_links:
+      - https://www.release.local/dashboard
